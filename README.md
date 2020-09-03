@@ -32,12 +32,17 @@ Alternatively, you could also use the bootRun gradle task to run the application
 ./gradlew bootRun
 ```
 
-The endpoints will be available at the following URLs:
+The endpoint to display the list of registrations is available at the following URL:
 
 ```
 GET http://localhost:8080/registrations/
 ```
 
+Accessing this URL should return the following list of registration as requested from instructions:
+
+```
+{"registrations":[{"plate_number":"EBF28E","registration":{"expired":false,"expiry_date":"2021-02-05T23:15:30.000Z"},"vehicule":{"type":"Wagon","make":"BMW","model":"X4 M40i","colour":"Blue","vin":"12389347324","tare_weight":1700,"gross_mass":null},"insurer":{"name":"Allianz","code":32}},{"plate_number":"CXD82F","registration":{"expired":true,"expiry_date":"2020-03-01T23:15:30.000Z"},"vehicule":{"type":"Hatch","make":"Toyota","model":"Corolla","colour":"Silver","vin":"54646546313","tare_weight":1432,"gross_mass":1500},"insurer":{"name":"AAMI","code":17}},{"plate_number":"WOP29P","registration":{"expired":false,"expiry_date":"2020-12-08T23:15:30.000Z"},"vehicule":{"type":"Sedan","make":"Mercedes","model":"X4 M40i","colour":"Blue","vin":"87676676672","tare_weight":1700,"gross_mass":null},"insurer":{"name":"GIO","code":13}},{"plate_number":"QWX55Z","registration":{"expired":false,"expiry_date":"2021-07-20T23:15:30.000Z"},"vehicule":{"type":"SUV","make":"Jaguar","model":"F pace","colour":"Green","vin":"65465466541","tare_weight":1620,"gross_mass":null},"insurer":{"name":"NRMA","code":27}}]}
+```
 
 **Docker**
 
