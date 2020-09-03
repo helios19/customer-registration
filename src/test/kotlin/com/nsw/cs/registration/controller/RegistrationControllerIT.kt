@@ -1,9 +1,5 @@
 package com.nsw.cs.registration.controller
 
-/**
- * Created by helios on 2/09/20.
- */
-
 
 import com.nsw.cs.registrations.Application
 import com.nsw.cs.registrations.repository.RegistrationRepository
