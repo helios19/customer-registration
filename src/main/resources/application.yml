@@ -1,0 +1,30 @@
+spring:
+  profiles.active: default
+---
+server.port: 8080
+spring:
+  profiles: default
+  application:
+    name: customer-service-registration
+
+# Jackson properties
+  jackson:
+    date-format: yyyy-MM-dd'T'HH:mm:ss.SSS'Z'
+    serialization:
+      WRITE_DATES_AS_TIMESTAMPS: false
+
+# cache properties
+  cache:
+    type: guava
+    guava:
+      spec: expireAfterAccess=600s
+    cache-names: registrations
+
+---
+spring:
+  profiles: test
+
+---
+  profiles: cacheDisabled
+# Disable cache
+  cache.type: none

@@ -1,0 +1,193 @@
+buildscript {
+    ext['jacksonVersion'] = '2.10.2'
+    ext['jacksonModuleKotlin'] = '2.10.2'
+    ext['kotlinVersion'] = '1.3.61'
+    ext['springBootVersion'] = '2.2.2.RELEASE'
+    ext['springDependencyManagement'] = '1.0.8.RELEASE'
+    ext['junitVersion'] = '5.4.2'
+    ext['springmockk'] = '1.1.3'
+    ext['gradleDockerVersion'] = '1.2'
+    ext['owaspVersion'] = '2.1.0.1'
+    ext['modelMapperVersion'] = '1.1.0'
+    ext['guavaVersion'] = '18.0'
+    ext['restAssuredVersion'] = '2.9.0'
+
+
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
+        classpath "org.jetbrains.kotlin:kotlin-allopen:$kotlinVersion"
+        classpath "org.springframework.boot:spring-boot-gradle-plugin:$springBootVersion"
+        classpath "org.jetbrains.kotlin:kotlin-noarg:$kotlinVersion"
+        classpath "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion"
+        classpath("se.transmode.gradle:gradle-docker:${gradleDockerVersion}")
+    }
+}
+
+apply plugin: 'application'
+apply plugin: 'idea'
+apply plugin: 'kotlin'
+apply plugin: 'kotlin-spring'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'io.spring.dependency-management'
+apply plugin: 'org.jetbrains.kotlin.jvm'
+
+apply plugin: 'kotlin-kapt'
+apply plugin: "kotlin-jpa"
+apply plugin: "kotlin-noarg"
+apply plugin: "kotlin-allopen"
+
+apply plugin: 'docker'
+
+allOpen {
+    annotation("javax.persistence.Entity")
+    annotation("javax.persistence.Embeddable")
+    annotation("javax.persistence.MappedSuperclass")
+}
+
+group = "registration"
+
+jar {
+    group = "registration"
+    baseName = "nsw-customer-service"
+    version = "1.0"
+    manifest {
+        attributes 'Main-Class': 'com.nsw.cs.registrations.Application'
+    }
+
+    from {
+        configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+}
+
+mainClassName = 'com.nsw.cs.registrations.ApplicationKt'
+
+
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+//    implementation("org.springframework.boot:spring-boot-starter-mustache")
+    implementation("org.springframework.boot:spring-boot-starter-web") {
+        exclude module: 'spring-boot-starter-tomcat'
+    }
+    implementation("org.springframework.boot:spring-boot-starter-hateoas")
+    implementation("org.springframework.boot:spring-boot-starter-undertow")
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
+    implementation('org.springframework.boot:spring-boot-starter-cache')
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonModuleKotlin")
+    implementation("org.jetbrains.kotlin:kotlin-reflect")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+    runtimeOnly("com.h2database:h2")
+    runtimeOnly("org.springframework.boot:spring-boot-devtools")
+    kapt("org.springframework.boot:spring-boot-configuration-processor")
+
+    // owasp
+    compile "org.owasp.esapi:esapi:${owaspVersion}"
+    // model mapper
+    compile "org.modelmapper:modelmapper:${modelMapperVersion}"
+    // guava
+    compile "com.google.guava:guava:${guavaVersion}"
+
+
+    implementation("com.fasterxml.jackson.core:jackson-annotations:$jacksonVersion")
+    implementation("com.fasterxml.jackson.core:jackson-core:$jacksonVersion")
+    implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
+    runtime("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:$jacksonVersion")
+    runtime("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jacksonVersion")
+    runtime("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
+
+    // unit testing
+    testCompile 'org.slf4j:jcl-over-slf4j:1.7.12'
+    testCompile "org.springframework.boot:spring-boot-starter-test"
+    testCompile "com.jayway.jsonpath:json-path"
+    testCompile "com.jayway.jsonpath:json-path-assert"
+    testCompile "com.jayway.restassured:spring-mock-mvc:${restAssuredVersion}"
+
+    testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlinVersion")
+
+    testImplementation("org.springframework.boot:spring-boot-starter-test") {
+        exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
+        exclude module: 'mockito-core'
+    }
+    testImplementation("org.junit.jupiter:junit-jupiter-api")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
+    testImplementation("com.ninja-squad:springmockk:$springmockk")
+}
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+compileKotlin {
+    kotlinOptions.jvmTarget = "1.8"
+}
+
+compileTestKotlin {
+    kotlinOptions.jvmTarget = "1.8"
+}
+
+kotlin {
+    experimental {
+        coroutines "enable"
+    }
+}
+
+
+allOpen {
+    annotation("javax.persistence.Entity")
+    annotation("javax.persistence.Embeddable")
+    annotation("javax.persistence.MappedSuperclass")
+}
+
+test {
+    useJUnitPlatform()
+
+    testLogging {
+        exceptionFormat = 'full'
+        events = ["passed", "failed", "skipped"]
+    }
+
+    // Fail the 'test' task on the first test failure
+    failFast = true
+}
+
+bootRun {
+//    addResources = true
+    sourceResources sourceSets.main
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '4.10'
+}
+
+idea {
+    module {
+        // When building the project in IntelliJ, use the same output path as Gradle.
+        inheritOutputDirs = false
+        outputDir = compileJava.destinationDir
+        testOutputDir = compileTestJava.destinationDir
+    }
+}
+
+task buildDocker(type: Docker, dependsOn: build) {
+    push = false
+    applicationName = jar.baseName
+    dockerfile = file('src/main/docker/Dockerfile')
+    def waitForScript = file('src/main/docker/wait-for-it.sh')
+    doFirst {
+        copy {
+            from jar
+            into stageDir
+        }
+        copy {
+            from waitForScript
+            into stageDir
+        }
+    }
+}
